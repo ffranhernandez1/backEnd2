@@ -1,85 +1,115 @@
-import express from "express";
-import * as dotenv from "dotenv";
-import __dirname from "./utils.js";
-import { engine } from "express-handlebars";
-import exphbs from "express-handlebars";
-import productRouter from "./routes/products.routes.js";
-import cartRouter from "./routes/carts.routes.js";
-import viewsRouter from "./routes/views.routes.js";
-import realTimeProductsRouter from "./routes/realTimeProducts.routes.js";
-import messagesRouter from "./routes/messages.routes.js";
+import express from "express"
+import { engine } from "express-handlebars"
+import Viewrouter from "./Routes/view.router.js"
+import { Server } from "socket.io"
+import ProductsModel from "./dao/models/products.js"
+import path from "path"
+import { __dirname, authToken } from "./utils.js"
+import * as dotenv from "dotenv"
+import mongoose from "mongoose"
+import Productosrouter from "./Routes/productos.router.js"
+import Carritorouter from "./Routes/carrito.router.js"
+import Chatrouter from "./Routes/chat.router.js"
+import MessagesModel from "./dao/models/messages.js"
+import sessionRouter from "./Routes/session.router.js"
+import session from "express-session"
+import MongoStore from "connect-mongo"
+import passport from "passport"
+import intializePassport from "./config/passport.config.js"
+import cookieParser from "cookie-parser"
 
-import { Server } from "socket.io"; 
+dotenv.config()
 
-import { addProduct, deleteProduct } from "./dao/dbManagers/productManager.js";
-import { addMessages, getMessages } from "./dao/dbManagers/messageManager.js";
+const app = express()
 
-import mongoose from "mongoose";
+const PORT = process.env.PORT || 8080
 
-dotenv.config();
+const MONGO_URL = process.env.URL_MONGOOSE
 
-const app = express();
+const connection = mongoose.connect(MONGO_URL)
 
-const PORT = process.env.PORT || 8080;
+app.use(cookieParser("C0D3RS3CR3T"))
 
-const MONGO_URI =
-  process.env.MONGO_URI ||
-  "mongodb+srv://coderhouse:123@cluster0.empwwtw.mongodb.net/ecommerce";
+app.use(session({
+    store : MongoStore.create({
+        mongoUrl: process.env.URL_MONGOOSE,
+        mongoOptions: {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        },
+        ttl: 100
+    }),
+    secret: "coderSecret",
+    resave: false,
+    saveUninitialized: false
+}))
 
-let dbConnect = mongoose.connect(MONGO_URI);
-dbConnect.then(() => {
-  console.log("conexion a la base de datos exitosa");
-}),
-  (error) => {
-    console.log("Error en la conexion a la base de datos", error);
-  };
+intializePassport()
+app.use(passport.initialize())
+app.use(passport.session()) 
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static("public"));
+app.use(express.json())
+app.use(express.urlencoded({extended : true}))
 
-const hbs = exphbs.create();
+app.engine('handlebars', engine());
+app.set('view engine', 'handlebars');
+app.set('views', path.join(__dirname, "./views"));
 
-hbs.handlebars.registerHelper("prop", function (obj, key) {
-  return obj[key];
-});
+app.use(express.static("../public"))
 
-app.engine("handlebars", hbs.engine);
-app.set("view engine", "handlebars");
-app.set("views", `${__dirname}/views`);
+app.use("/productos",Productosrouter)
+app.use("/carrito",Carritorouter)
+app.use("/views",authToken,Viewrouter)
+app.use("/chat",authToken,Chatrouter)
+app.use("/",sessionRouter)
 
-app.use("/api/products", productRouter);
-app.use("/api/carts", cartRouter);
-app.use("/", viewsRouter);
-app.use("/realtimeproducts", realTimeProductsRouter);
-app.use("/messages", messagesRouter);
+const server = app.listen(PORT,()=>{
+    console.log("Escuchando desde el puerto " + PORT)
+})
 
-const httpServer = app.listen(PORT, () => {
-  console.log(`Escuchando al puerto ${PORT}`);
-});
+server.on("error",(err)=>{
+    console.log(err)
+})
 
-const socketServer = new Server(httpServer);
 
-socketServer.on("connection", (socket) => {
-  console.log("Nuevo cliente se ha conectado");
+const ioServer = new Server(server)
 
-  socket.on("message", (data) => {
-    console.log(data);
-  });
+ioServer.on("connection", async (socket) => {
+    console.log("Nueva conexión establecida");
 
-  socket.emit("render", "Me estoy comunicando desde el servidor");
+    socket.on("disconnect",()=>{
+        console.log("Usuario desconectado")
+    })
 
-  socket.on("addProduct", (product) => {
-    addProduct(product);
-  });
+    socket.on("new-product", async (data) => {
+      let title = data.title
+      let description = data.description
+      let code = data.code
+      let price = +data.price
+      let stock = +data.stock
+      let category = data.category
+      let thumbnail = data.thumbnail
+      console.log(title,description,code,price,stock,category,thumbnail)
+      console.log("Producto agregado correctamente")
+    });
 
-  socket.on("delete-product", (productId) => {
-    const { id } = productId;
-    deleteProduct(id);
-  });
+    socket.on("delete-product",async(data)=>{ 
+        let id = data;
+        let result = await ProductsModel.findByIdAndDelete(id);
+        console.log("Producto eliminado", result);
+    })
+    
 
-  socket.on("user-message", (obj) => {
-    addMessages(obj);
-    socketServer.emit("new-message", obj)
-  });
+    const productos = await ProductsModel.find({}).lean()
+    socket.emit("update-products", productos)
+
+    socket.on("guardar-mensaje",(data)=>{
+        MessagesModel.insertMany([data])
+    })
+
+    const mensajes = await MessagesModel.find({}).lean()
+    socket.emit("enviar-mensajes",mensajes)
+    socket.on("Nuevos-mensajes",(data)=>{
+        console.log(data + " nuevos mensajes")
+    })
 });

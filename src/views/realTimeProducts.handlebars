@@ -1,52 +1,35 @@
-<div>
-    <h1>Real Time products</h1>
-    <div class="real-time-form">
-        <form id="formProducts" method="post" action="/realtimeproducts">
-            <label for="productTitle">Titulo:</label>
-            <input type="text" placeholder="Titulo del producto" name="title" id="productTitle" />
-            <label for="productDescription">Descripcion:</label>
-            <textarea type="text" rows="10" placeholder="Descripcion del producto" name="description"
-                id="productDescription"></textarea>
-            <label for="productCategory">Categoría producto: </label>
-            <input type="text" placeholder="Categoría del producto" name="category" id="productCategory">
-            <label for="productPrice">Precio: </label>
-            <input type="number" placeholder="Precio del producto" name="price" id="productPrice">
-            <label for="productCode">Codigo Producto</label>
-            <input type="text" placeholder="Codigo del producto" name="code" id="productCode">
-            <label for="productStock">Stock:</label>
-            <input type="number" placeholder="cantidad en stock" name="stock" id="productStock">
-            <label for="productThumbnails">Imagenes:</label>
-            <input type="text" placeholder="URL de la imagen" name="thumbnails" id="productThumbnails">
-            <button type="submit">Agregar</button>
-        </form>
-    </div>
-    <div class="list">
-        <ul id="productsList">
-            {{#each products}}
-            <li>
-                <div class="info">
-                    <h2>
-                        {{prop this 'title'}}
-                    </h2>
-                    <div class="description-category">
-                        <p><span>Description:</span> {{prop this 'description'}}</p>
-                        <p><span>Category:</span> {{prop this 'category'}}</p>
-                    </div>
-                    <div class="price-stock">
-                        <p><span>Price:</span> ${{prop this 'price'}}</p>
-                        <p><span>Stock:</span> {{prop this 'stock'}}</p>
-                    </div>
-                </div>
-                <div class="thumbnails">
-                    {{#each (prop this 'thumbnails')}}
-                        <img src="{{this}}" alt="{{prop ../this 'title'}}">
-                    {{/each}}
-                </div>
-                <button class="deleteButton" id={{prop this '_id'}}>Eliminar</button>
-            </li>
-            {{/each}}
-        </ul>
-    </div>
+<h1>Modificar Productos</h1>
+<div style="display: flex;" style="flex-wrap: wrap;" id="contenedor">
+
 </div>
-<script src="/socket.io/socket.io.js"></script>
-<script src="./js/script.js"></script>
+<br>
+
+<button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal1">
+  Agregar Producto
+</button>
+
+<div class="modal fade" id="exampleModal1" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Crear Producto</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="productForm" method="POST" action="/realtimeproducts">
+        <input type="text" placeholder="Ingrese nombre" id="nombre">
+        <input type="text" placeholder="Ingrese descripción" id="descripcion">
+        <input type="text" placeholder="Ingrese codigo" id="codigo">
+        <input type="text" placeholder="Ingrese precio" id="precio">
+        <input type="text" placeholder="Ingrese stock" id="stock">
+        <input type="text" placeholder="Ingrese categoria" id="categoria">
+        <input type="text" placeholder="Ingrese rutas" id="rutas">
+        <button type="submit" class="btn btn-primary">Save changes</button>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button> 
+      </div>
+    </div>
+  </div>
+</div>

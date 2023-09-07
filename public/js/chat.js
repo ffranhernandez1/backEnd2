@@ -1,43 +1,75 @@
-const socket = io(); // levantamos el socket desde el lado del cliente
+const socket = io()
 
-/* chat con websockets */
-const userMessage = document.querySelector("#userMessage");
-let userEmail;
-//autenticacion con sweet alert
+
+socket.emit("connection","Nuevo cliente")
+
+let user;
+
 Swal.fire({
-  title: "Please enter your email",
-  input: "text",
-  allowOutsideClick: false,
-  showConfirmButton: false,
-}).then((result) => {
-  userEmail = result.value;
-
-  userMessage.addEventListener("keyup", (e) => {
-    if (e.key === "Enter") {
-      if (userMessage.value.trim().length > 0) {
-        const obj = {
-          user: userEmail,
-          message: userMessage.value,
-        };
-        socket.emit("user-message", obj)
-        
-      } else {
-        alert("Para enviar el mensaje, debes escribir primero");
-      }
-      userMessage.value = "";
+    title: 'Submit your Github username',
+    input: 'text',
+    inputAttributes: {
+      autocapitalize: 'off'
+    },
+    showCancelButton: true,
+    confirmButtonText: 'Look up',
+    showLoaderOnConfirm: true,
+    preConfirm: (login) => {
+      return fetch(`//api.github.com/users/${login}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(response.statusText)
+          }
+          return response.json()
+        })
+        .catch(error => {
+          Swal.showValidationMessage(
+            `Request failed: ${error}`
+          )
+        })
+    },
+    allowOutsideClick: () => !Swal.isLoading()
+  }).then((result) => {
+    if (result.isConfirmed) {
+      Swal.fire({
+        title: `${result.value.login}'s avatar`,
+        imageUrl: result.value.avatar_url
+      })
+      user = result.value.login
     }
-  });
-});
+})
 
-// Escuchar el evento "new-message" del servidor
-socket.on("new-message", (message) => {
-    // Aquí actualizas el DOM con el nuevo mensaje recibido
-    const chatContainer = document.querySelector(".display-messages");
-    const messageElement = document.createElement("div");
-    messageElement.classList.add(message.id); // Asegúrate de que el mensaje tenga una clase con el ID para eliminarlo correctamente.
-    messageElement.innerHTML = `
-      <small>${message.user}</small>
-      <p>${message.message}</p>
-    `;
-    chatContainer.appendChild(messageElement);
-  });
+let chatBox = document.getElementById('chatBox')
+
+chatBox.addEventListener('keyup',(e)=>{
+    if(e.key === "Enter"){
+        let mensaje = chatBox.value
+        let contenedorMensajes = document.getElementById('contenedorMensajes')
+        let newDiv = document.createElement('div')
+        newDiv.innerHTML = ` 
+        <div>
+        <p><b>${user}</b></p>
+        <p>${mensaje}</p>
+        </div>
+        `
+        socket.emit("guardar-mensaje",{user: user, message: mensaje})
+        contenedorMensajes.append(newDiv)
+        chatBox.value = ""
+    }
+})
+
+socket.on("enviar-mensajes",(data)=>{
+    let contenedorMensajes = document.getElementById('contenedorMensajes')
+    contenedorMensajes.innerHTML = ""
+    data.forEach((mensaje)=>{
+        let newDiv = document.createElement('div')
+        newDiv.innerHTML =  ` 
+        <div>
+        <p><b>${mensaje.user}</b></p>
+        <p>${mensaje.message}</p>
+        </div>
+        `
+        contenedorMensajes.append(newDiv)
+    })
+    socket.emit("Nuevos-mensajes",data.length)
+})

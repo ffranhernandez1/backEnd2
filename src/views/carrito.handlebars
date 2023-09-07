@@ -1,0 +1,27 @@
+<h1>Carrito</h1>
+<table style="width: 100%;">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Titulo</th>
+            <th>Code</th>
+            <th>Category</th>
+            <th>Cantidad</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each productos}}
+        <tr>
+            <td><img src="{{this.product.thumbnail}}" alt="{{this.product.title}}"  class="product-image"></td>
+            <td>{{this.product.title}}</td>
+            <td>{{this.product.code}}</td>
+            <td>{{this.product.category}}</td>
+            <td>{{this.product.quantity}}</td>
+            <td>${{this.product.price}}</td>
+            <td><button class="btn btn-danger" id="{{this.product._id}}">Eliminar</button></td>
+        </tr>
+        {{/each}}
+    </tbody>
+</table>
+<button class="btn btn-warning" id="vaciar">Vaciar Carrito</button>
