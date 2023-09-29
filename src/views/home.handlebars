@@ -1,36 +1,35 @@
-<div>
-    <h1 class="title">Lista de productos.</h1>
-    <div class="list">
-        <ul>
-            {{#each products}}
-            <li>
-                <div class="info">
-                    <h2>
-                        {{title}}
-                    </h2>
-                    <div class="description-category">
-                        <p><span>Description:</span> {{description}}</p>
-                        <p><span>Category:</span> {{category}}</p>
-                    </div>
-                    <div class="price-stock">
-                        <p><span>Price:</span> ${{price}}</p>
-                        <p><span>Stock:</span> {{stock}}</p>
-                    </div>
-                    <div class="addToCart" id="addToCart" onclick="console.log({{"_id"}})" >
-                         <p>Agregar al carrito</p>
-                         </div>
-
-                </div>
-                <div class="thumbnails">
-                    {{#each ('thumbnails')}}
-                        <img src="{{this}}" alt="{{title}}">
-                    {{/each}}
-                </div>
-
-            </li>
-            {{/each}}
-        </ul>
-    </div>
+<h1 class="title-home">Productos</h1>
+<a href="" id="cerrarSesion">Cerrar Sesion</a>
+<p>Bienvenido {{fullname}}</p>
+<p>Mail: {{email}}</p>
+<p>Rol: {{rol}}</p>
+<a href="http://localhost:{{PORT}}/views/carts/{{idCart}}" id="id-carrito"><span class="material-symbols-outlined">
+shopping_cart
+</span></a>
+<div class="container-products">
+    {{#each productos}}
+ <div class="card" style="width: 18rem;">
+  <img src="{{this.thumbnail}}" className="card-img-top" alt="{{this.title}}">
+  <div class="card-body">
+    <h5 class="card-title">{{this.title}}</h5>
+    <p class="card-text">{{this.description}}</p>
+  </div>
+  <ul class="list-group list-group-flush">
+    <li class="list-group-item">{{this.code}}</li>
+    <li class="list-group-item">${{this.price}}</li>
+    <li class="list-group-item">Stock: {{this.stock}}</li>
+  </ul>
+  <div class="card-body">
+    <a href="#" class="card-link">{{this.status}}</a>
+    <a href="#" class="card-link">{{this.category}}</a>
+    <button class="btn btn-success" id="{{this._id}}">Agregar al Carrito</button>
+  </div>
 </div>
-<script src="./js/script.js"></script>
-<script src="./js/products.js"></script>
+    {{/each}}
+</div>
+{{#if hasPrevPage}}
+ <a href="/views?limit={{limit}}&page={{prevPage}}&sort={{sort}}&query={{query}}"><button class="btn btn-danger">Anterior</button></a>
+{{/if}}
+{{#if hasNextPage}}
+ <a href="/views?limit={{limit}}&page={{nextPage}}&sort={{sort}}&query={{query}}"><button class="btn btn-danger">Siguiente</button></a>
+{{/if}}

@@ -1,9 +1,9 @@
 .product-image{
-    width: 200px;
-    border-radius: 5px;
-    margin-left: 15px;
+    width: 150px;
+    border-radius: 10px;
+    margin-left: 20px;
 }
 
 #vaciar{
-    margin: 120px;
+    margin: 100px;
 }
