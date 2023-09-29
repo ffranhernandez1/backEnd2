@@ -38,12 +38,11 @@ const productsSchema = new mongoose.Schema({
     },
     quantity :{
         type: Number,
-        require: true
+        require: true,
+        default: 1
     }
 })
 
 productsSchema.plugin(mongoosePaginate)
 
-const ProductsModel = mongoose.model(productsCollection,productsSchema)
-
-export default ProductsModel
+export const PRODUCTS_MODEL = mongoose.model(productsCollection,productsSchema)
